@@ -5,46 +5,53 @@
     "version": "0.1.1",
     "author": "Bernie Zhao",
     "main": "dist/main.js",
-  
     "scripts": {
-      "build": "webpack --mode production",
-      "dev": "webpack --watch --mode development & electron .",
-      "type-check": "tsc --noEmit",
-      "start": "electron .",
-      "pack": "electron-builder --dir",
-      "dist": "electron-builder"
+        "build": "webpack --mode production",
+        "dist": "npm run build && electron-builder",
+        "dev": "webpack --watch --mode development & electron .",
+        "start": "electron ."
     },
-  
     "dependencies": {
-      "@modelcontextprotocol/inspector": "0.11.0",
-      "wait-on": "^7.0.1"
+        "@modelcontextprotocol/inspector": "0.11.0",
+        "wait-on": "^7.0.1"
     },
-  
     "devDependencies": {
-      "@types/electron": "^1.4.38",
-      "@types/node": "^22.15.18",
-      "@types/wait-on": "^5.3.4",
-      "electron": "^36.2.0",
-      "electron-builder": "^26.0.12",
-      "ts-loader": "^9.5.2",
-      "typescript": "^5.8.3",
-      "webpack": "^5.99.8",
-      "webpack-cli": "^6.0.1"
+        "@types/electron": "^1.4.38",
+        "@types/node": "^22.15.18",
+        "@types/wait-on": "^5.3.4",
+        "electron": "^36.2.0",
+        "electron-builder": "^26.0.12",
+        "ts-loader": "^9.5.2",
+        "typescript": "^5.8.3",
+        "webpack": "^5.99.8",
+        "webpack-cli": "^6.0.1"
     },
-  
     "build": {
-      "asarUnpack": ["node_modules/@modelcontextprotocol/inspector/dist/**"],
-      "files": [
-        "dist/**/*",
-        "node_modules/**/*",
-        "package.json"
-      ],
-      "directories": {
-        "buildResources": "build"
-      },
-  
-      "mac":   { "target": ["dmg"] },
-      "win":   { "target": ["nsis"] },
-      "linux": { "target": ["AppImage"] }
+        "asarUnpack": [
+            "node_modules/@modelcontextprotocol/inspector/dist/**"
+        ],
+        "files": [
+            "dist/**/*",
+            "node_modules/**/*",
+            "package.json"
+        ],
+        "directories": {
+            "buildResources": "build"
+        },
+        "mac": {
+            "target": [
+                "dmg"
+            ]
+        },
+        "win": {
+            "target": [
+                "nsis"
+            ]
+        },
+        "linux": {
+            "target": [
+                "AppImage"
+            ]
+        }
     }
-  }
+}
