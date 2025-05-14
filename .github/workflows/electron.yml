@@ -1,31 +1,81 @@
-name: Build/release
+name: Build & Release MCP Inspector Desktop
 
-on: push
+# ❶ 触发策略：推送 v* 标签时自动打包；也允许手动触发
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+# ❷ 新权限模型：让默认 GITHUB_TOKEN 拥有写 Release / Packages 的权限
+permissions:
+  contents: write
+  packages: write
 
 jobs:
-  release:
+  build:
     runs-on: ${{ matrix.os }}
-
     strategy:
+      fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [macos-14, windows-latest, ubuntu-latest]
 
     steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v1
+      # 1. 检出代码
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
+      # 2. 安装 Node & 缓存 npm
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
+          cache: npm
 
-      - name: Build/release Electron app
-        uses: samuelmeuli/action-electron-builder@v1
+      # 3. 安装依赖（速度更稳的 npm ci；若用 pnpm/yarn 请自行替换）
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. 运行 electron-builder
+      - name: Build with electron-builder
+        env:
+          # electron-builder 会自动读取 GH_TOKEN 进行 GitHub 发布
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # ↓↓↓ 如需代码签名，把 P12 / PFX 转成 base64 放到仓库 Secrets，再解注释
+          # macOS
+          # CSC_LINK: ${{ secrets.CSC_LINK }}
+          # CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          # Windows
+          # WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          # WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: |
+          npm run dist
+
+      # 5. 把生成的安装包存为工作流 Artifact，方便调试或手动分发
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          github_token: ${{ secrets.github_token }}
+          name: ${{ matrix.os }}-artifacts
+          path: |
+            dist/**/*.dmg
+            dist/**/*.exe
+            dist/**/*.AppImage
+            dist/**/*.zip
+            dist/**/*.deb
+            dist/**/*.yml
 
-          # If the commit is tagged with a version (e.g. "v1.0.0"),
-          # release the app after building
-          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      # 6. 将产物附加到 GitHub Release（草稿状态，确认后手动发布）
+      - name: Draft GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          draft: true                    # 安全起见先草稿
+          files: |
+            dist/**/*.dmg
+            dist/**/*.exe
+            dist/**/*.AppImage
+            dist/**/*.zip
+            dist/**/*.deb
+            dist/**/*.yml
