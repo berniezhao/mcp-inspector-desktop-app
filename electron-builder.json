@@ -1,0 +1,16 @@
+{
+  "asarUnpack": [
+    "node_modules/@modelcontextprotocol/inspector/dist/**"
+  ],
+  "files": [
+    "dist/**/*",
+    "node_modules/**/*",
+    "package.json"
+  ],
+  "directories": {
+    "buildResources": "build"
+  },
+  "mac": { "target": "dmg" },
+  "win": { "target": "nsis" },
+  "linux": { "target": "AppImage" }
+} 
